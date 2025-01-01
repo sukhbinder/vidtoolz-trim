@@ -3,13 +3,14 @@ import vidtoolz_trim as w
 
 from argparse import Namespace, ArgumentParser
 
+
 def test_create_parser():
     subparser = ArgumentParser().add_subparsers()
     parser = w.create_parser(subparser)
 
     assert parser is not None
 
-    result = parser.parse_args(['hello', "-st" , "00:00", "-et", "1:00"])
+    result = parser.parse_args(["hello", "-st", "00:00", "-et", "1:00"])
     assert result.inputfile == "hello"
     assert result.starttime == "00:00"
     assert result.endtime == "1:00"
