@@ -11,7 +11,7 @@ def test_create_parser():
     assert parser is not None
 
     result = parser.parse_args(["hello", "-st", "0", "-et", "1"])
-    assert result.inputfile == "hello"
+    assert result.input == "hello"
     assert result.starttime == 0.0
     assert result.endtime == 1.0
     assert result.output is None

@@ -97,7 +97,7 @@ def trim_video(input_file, output_file, start_time, end_time):
 
 def create_parser(subparser):
     parser = subparser.add_parser("trim", description="Trim video using ffmpeg")
-    parser.add_argument("inputfile", type=str, help="Single file name")
+    parser.add_argument("input", type=str, help="Single file name")
     parser.add_argument("-st", "--starttime", type=float, help="Start time in the s")
     parser.add_argument("-et", "--endtime", type=float, help="End time in the s")
     parser.add_argument(
@@ -129,9 +129,8 @@ class ViztoolzPlugin:
         self.parser.set_defaults(func=self.run)
 
     def run(self, args):
-        iret = trim_by_ffmpeg(
-            args.inputfile, args.starttime, args.endtime, args.outputfile, args.duration
-        )
+        output = determine_output_path(args.input, args.output)
+        iret = trim_video(args.input, output, args.starttime, args.endtime)
         print("{} created.".format(args.outputfile))
 
     def hello(self, args):
