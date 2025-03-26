@@ -10,12 +10,11 @@ def test_create_parser():
 
     assert parser is not None
 
-    result = parser.parse_args(["hello", "-st", "00:00", "-et", "1:00"])
+    result = parser.parse_args(["hello", "-st", "0", "-et", "1"])
     assert result.inputfile == "hello"
-    assert result.starttime == "00:00"
-    assert result.endtime == "1:00"
-    assert result.outputfile == "output.mp4"
-    assert result.duration is None
+    assert result.starttime == 0.0
+    assert result.endtime == 1.0
+    assert result.output is None
 
 
 def test_plugin(capsys):
