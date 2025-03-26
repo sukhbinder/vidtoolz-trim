@@ -98,8 +98,19 @@ def trim_video(input_file, output_file, start_time, end_time):
 def create_parser(subparser):
     parser = subparser.add_parser("trim", description="Trim video using ffmpeg")
     parser.add_argument("input", type=str, help="Single file name")
-    parser.add_argument("-st", "--starttime", type=float, help="Start time in the s")
-    parser.add_argument("-et", "--endtime", type=float, help="End time in the s")
+    parser.add_argument(
+        "-st",
+        "--starttime",
+        type=float,
+        default=0,
+        help="Start time in the seconds (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-et",
+        "--endtime",
+        type=float,
+        help="End time in the seconds (default: %(default)s)",
+    )
     parser.add_argument(
         "-o",
         "--output",
@@ -131,7 +142,7 @@ class ViztoolzPlugin:
     def run(self, args):
         output = determine_output_path(args.input, args.output)
         iret = trim_video(args.input, output, args.starttime, args.endtime)
-        print("{} created.".format(args.outputfile))
+        print("{} created.".format(output))
 
     def hello(self, args):
         # this routine will be called when "vidtoolz "trim is called."
