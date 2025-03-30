@@ -2,6 +2,19 @@ import vidtoolz
 import subprocess
 import os
 
+def format_seconds(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours:02}:{minutes:02}:{seconds:02}"
+
+def get_length(filename):
+    result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
+                             "format=duration", "-of",
+                             "default=noprint_wrappers=1:nokey=1", filename],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    return float(result.stdout)
+
 
 def determine_output_path(input_file, output_file):
     input_dir, input_filename = os.path.split(input_file)
@@ -53,6 +66,10 @@ def trim_video(input_file, output_file, start_time, end_time):
         # Check if the input file exists
         if not os.path.exists(input_file):
             raise FileNotFoundError(f"Input file '{input_file}' not found.")
+        
+        # check if endtime is -1 that is till the end
+        if end_time == -1:
+            end_time = get_length(input_file)
 
         # Ensure start time and end time are valid
         if start_time < 0 or end_time <= start_time:
@@ -66,15 +83,21 @@ def trim_video(input_file, output_file, start_time, end_time):
             "-i",
             input_file,
             "-ss",
-            str(start_time),
+            format_seconds(int(start_time)),
             "-to",
-            str(end_time),
+            format_seconds(int(end_time)),
             "-c:v",
-            "copy",
+            "libx264",
             "-c:a",
-            "copy",
+            "aac",
             output_file,
         ]
+        
+        # Re-encode for Precise Cuts
+        # ffmpeg -i input.mov -ss 00:00:05 -to 00:00:10 -c:v libx264 -c:a aac output.mov
+        
+        #  MOV-Specific Considerations
+        # ffmpeg -i input.mov -map 0 -map_metadata -1 -c copy output.mov
 
         # Execute the command
         result = subprocess.run(command, capture_output=True, text=True)
@@ -93,6 +116,8 @@ def trim_video(input_file, output_file, start_time, end_time):
         print(f"Error: {re}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+    
+    return output_file
 
 
 def create_parser(subparser):
@@ -101,14 +126,15 @@ def create_parser(subparser):
     parser.add_argument(
         "-st",
         "--starttime",
-        type=float,
+        type=int,
         default=0,
         help="Start time in the seconds (default: %(default)s)",
     )
     parser.add_argument(
         "-et",
         "--endtime",
-        type=float,
+        type=int,
+        default=-1,
         help="End time in the seconds (default: %(default)s)",
     )
     parser.add_argument(
@@ -141,8 +167,8 @@ class ViztoolzPlugin:
 
     def run(self, args):
         output = determine_output_path(args.input, args.output)
-        iret = trim_video(args.input, output, args.starttime, args.endtime)
-        print("{} created.".format(output))
+        outputfile = trim_video(args.input, output, args.starttime, args.endtime)
+        print("{} created.".format(outputfile))
 
     def hello(self, args):
         # this routine will be called when "vidtoolz "trim is called."
