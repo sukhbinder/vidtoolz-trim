@@ -1,18 +1,30 @@
 import vidtoolz
 import subprocess
 import os
+from moviepy.tools import convert_to_seconds
+
 
 def format_seconds(seconds):
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f"{hours:02}:{minutes:02}:{seconds:02}"
 
+
 def get_length(filename):
-    result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
-                             "format=duration", "-of",
-                             "default=noprint_wrappers=1:nokey=1", filename],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            filename,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
     return float(result.stdout)
 
 
@@ -66,11 +78,14 @@ def trim_video(input_file, output_file, start_time, end_time):
         # Check if the input file exists
         if not os.path.exists(input_file):
             raise FileNotFoundError(f"Input file '{input_file}' not found.")
-        
+
         # check if endtime is -1 that is till the end
         if end_time == -1:
             end_time = get_length(input_file)
 
+        # convert time and end
+        start_time = convert_to_seconds(start_time)
+        end_time = convert_to_seconds(end_time)
         # Ensure start time and end time are valid
         if start_time < 0 or end_time <= start_time:
             raise ValueError(
@@ -83,19 +98,19 @@ def trim_video(input_file, output_file, start_time, end_time):
             "-i",
             input_file,
             "-ss",
-            format_seconds(int(start_time)),
+            format_seconds(start_time),
             "-to",
-            format_seconds(int(end_time)),
+            format_seconds(end_time),
             "-c:v",
             "libx264",
             "-c:a",
             "aac",
             output_file,
         ]
-        
+
         # Re-encode for Precise Cuts
         # ffmpeg -i input.mov -ss 00:00:05 -to 00:00:10 -c:v libx264 -c:a aac output.mov
-        
+
         #  MOV-Specific Considerations
         # ffmpeg -i input.mov -map 0 -map_metadata -1 -c copy output.mov
 
@@ -116,7 +131,7 @@ def trim_video(input_file, output_file, start_time, end_time):
         print(f"Error: {re}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-    
+
     return output_file
 
 
@@ -126,16 +141,16 @@ def create_parser(subparser):
     parser.add_argument(
         "-st",
         "--starttime",
-        type=int,
+        type=float,
         default=0,
-        help="Start time in the seconds (default: %(default)s)",
+        help="Start time in the seconds or in format 1:23 (default: %(default)s)",
     )
     parser.add_argument(
         "-et",
         "--endtime",
-        type=int,
+        type=float,
         default=-1,
-        help="End time in the seconds (default: %(default)s)",
+        help="End time in the seconds or in format 1:23 (default: %(default)s)",
     )
     parser.add_argument(
         "-o",
