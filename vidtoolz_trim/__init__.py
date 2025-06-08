@@ -79,6 +79,9 @@ def trim_video(input_file, output_file, start_time, end_time):
         if not os.path.exists(input_file):
             raise FileNotFoundError(f"Input file '{input_file}' not found.")
 
+        if os.path.exists(output_file):
+            os.remove(output_file)
+
         # check if endtime is -1 that is till the end
         if end_time == -1:
             end_time = get_length(input_file)
@@ -98,9 +101,9 @@ def trim_video(input_file, output_file, start_time, end_time):
             "-i",
             input_file,
             "-ss",
-            format_seconds(start_time),
+            str(start_time),
             "-to",
-            format_seconds(end_time),
+            str(end_time),
             "-c:v",
             "libx264",
             "-c:a",
@@ -121,8 +124,6 @@ def trim_video(input_file, output_file, start_time, end_time):
         if result.returncode != 0:
             raise RuntimeError(f"FFmpeg error: {result.stderr}")
 
-        print(f"Video trimmed successfully! Output saved to '{output_file}'.")
-
     except FileNotFoundError as fnfe:
         print(f"Error: {fnfe}")
     except ValueError as ve:
@@ -141,15 +142,15 @@ def create_parser(subparser):
     parser.add_argument(
         "-st",
         "--starttime",
-        type=float,
         default=0,
+        type=str,
         help="Start time in the seconds or in format 1:23 (default: %(default)s)",
     )
     parser.add_argument(
         "-et",
         "--endtime",
-        type=float,
         default=-1,
+        type=str,
         help="End time in the seconds or in format 1:23 (default: %(default)s)",
     )
     parser.add_argument(
