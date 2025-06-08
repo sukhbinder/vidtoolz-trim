@@ -12,8 +12,8 @@ def test_create_parser():
 
     result = parser.parse_args(["hello", "-st", "0", "-et", "1"])
     assert result.input == "hello"
-    assert result.starttime == 0.0
-    assert result.endtime == 1.0
+    assert result.starttime == "0"
+    assert result.endtime == "1"
     assert result.output is None
 
 
